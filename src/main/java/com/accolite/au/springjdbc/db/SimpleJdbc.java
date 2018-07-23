@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -14,18 +15,28 @@ public class SimpleJdbc {
 
 	private static final Logger log = Logger.getLogger(SimpleJdbc.class);
 
-	private final String simpleDbName = "hk_db";
-	private final String simpleDbTable = "doctor";
-	private final String simpleDbUser = "root";
-	private String simpleDbPass = "";
-	private String simpleDbUrl = "jdbc:mysql://localhost:3306/";
+	@Value("${simpleJdbc.table}")
+	private String simpleDbTable;
+
+	@Value("${simpleJdbc.driver}")
+	private String simpleDbDriver;
+
+	@Value("${simpleJdbc.user}")
+	private String simpleDbUser;
+
+	@Value("${simpleJdbc.pass}")
+	private String simpleDbPass;
+
+	@Value("${simpleJdbc.url}")
+	private String simpleDbUrl;
+
+	public SimpleJdbc() {
+
+	}
 
 	public void testConnection() {
-		log.info("-------- MySQL JDBC Connection Testing ------------" + simpleDbUrl + simpleDbName + simpleDbUser
-				+ simpleDbPass + ":" + simpleDbTable);
-
 		try {
-			Class.forName("com.mysql.jdbc.Driver");
+			Class.forName(simpleDbDriver);
 		} catch (ClassNotFoundException e) {
 			log.info("MySQL Driver not loaded");
 			log.error(e);
@@ -34,12 +45,11 @@ public class SimpleJdbc {
 
 		log.info("MySQL JDBC Driver Registered!");
 
-		try (Connection connection = DriverManager.getConnection(simpleDbUrl + simpleDbName, simpleDbUser,
-				simpleDbPass)) {
+		try (Connection connection = DriverManager.getConnection(simpleDbUrl, simpleDbUser, simpleDbPass)) {
 			if (null != connection) {
 				log.info("Connection established successfully!");
 				Statement st = connection.createStatement();
-				ResultSet rs = st.executeQuery("select age from doctor");
+				ResultSet rs = st.executeQuery("select age from doctor limit 10");
 				while (rs.next()) {
 					log.info("Got age " + rs.getString("age"));
 				}
@@ -48,6 +58,7 @@ public class SimpleJdbc {
 			}
 		} catch (SQLException e) {
 			log.info("Connection Failed! Check output console");
+			e.printStackTrace();
 			log.error(e);
 		}
 
