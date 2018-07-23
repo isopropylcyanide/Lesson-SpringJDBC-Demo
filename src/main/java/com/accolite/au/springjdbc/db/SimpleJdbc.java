@@ -2,42 +2,55 @@ package com.accolite.au.springjdbc.db;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 import org.apache.log4j.Logger;
+import org.springframework.stereotype.Component;
 
+@Component
 public class SimpleJdbc {
 
 	private static final Logger log = Logger.getLogger(SimpleJdbc.class);
 
-	public static void main(String[] args) {
-		log.info("-------- MySQL JDBC Connection Testing ------------");
+	private final String simpleDbName = "hk_db";
+	private final String simpleDbTable = "doctor";
+	private final String simpleDbUser = "root";
+	private String simpleDbPass = "";
+	private String simpleDbUrl = "jdbc:mysql://localhost:3306/";
+
+	public void testConnection() {
+		log.info("-------- MySQL JDBC Connection Testing ------------" + simpleDbUrl + simpleDbName + simpleDbUser
+				+ simpleDbPass + ":" + simpleDbTable);
 
 		try {
 			Class.forName("com.mysql.jdbc.Driver");
 		} catch (ClassNotFoundException e) {
-			System.out.println("Where is your MySQL JDBC Driver?");
-			e.printStackTrace();
+			log.info("MySQL Driver not loaded");
+			log.error(e);
 			return;
 		}
 
-		System.out.println("MySQL JDBC Driver Registered!");
-		Connection connection = null;
+		log.info("MySQL JDBC Driver Registered!");
 
-		try {
-			connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/hk_db", "root", "");
-
+		try (Connection connection = DriverManager.getConnection(simpleDbUrl + simpleDbName, simpleDbUser,
+				simpleDbPass)) {
+			if (null != connection) {
+				log.info("Connection established successfully!");
+				Statement st = connection.createStatement();
+				ResultSet rs = st.executeQuery("select age from doctor");
+				while (rs.next()) {
+					log.info("Got age " + rs.getString("age"));
+				}
+			} else {
+				log.info("Failed to make connection!");
+			}
 		} catch (SQLException e) {
-			System.out.println("Connection Failed! Check output console");
-			e.printStackTrace();
-			return;
+			log.info("Connection Failed! Check output console");
+			log.error(e);
 		}
 
-		if (connection != null) {
-			System.out.println("You made it, take control your database now!");
-		} else {
-			System.out.println("Failed to make connection!");
-		}
 	}
 
 }
